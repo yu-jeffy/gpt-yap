@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Speech to Text Application</title>
+</head>
+<body>
+    <h1>Speak to GPT-4</h1>
+    <button id="toggleMicrophone">Toggle Microphone</button>
+    <input type="text" id="textInput" placeholder="Or type your message here">
+    <button id="sendText">Send</button>
+    <div id="response"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        document.getElementById('toggleMicrophone').addEventListener('click', function() {
+            if (!isRecording) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.start();
+                        audioChunks = [];
+                        mediaRecorder.addEventListener("dataavailable", event => {
+                            audioChunks.push(event.data);
+                        });
+                        mediaRecorder.addEventListener("stop", () => {
+                            const audioBlob = new Blob(audioChunks);
+                            const formData = new FormData();
+                            formData.append("audio_data", audioBlob);
+                            fetch("/transcribe", {
+                                method: "POST",
+                                body: formData,
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('response').innerText = data.transcribed_text;
+                            })
+                            .catch(error => console.error("Error:", error));
+                        });
+                        isRecording = true;
+                    })
+                    .catch(error => console.error("Error:", error));
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        });
+
+        document.getElementById('sendText').addEventListener('click', function() {
+            const textInput = document.getElementById('textInput').value;
+            // Here you would send the textInput to the server for processing
+            // and then display the response similarly to the transcribe response.
+        });
+    </script>
+</html>
