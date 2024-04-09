@@ -1,0 +1,6 @@
+flask
+openai
+gTTS
+requests
+python-dotenv
+SpeechRecognition
