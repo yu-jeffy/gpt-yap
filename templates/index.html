@@ -6,8 +6,9 @@
 </head>
 <body>
     <h1>Speak to GPT-4</h1>
-    <button id="toggleMicrophone">Toggle Microphone</button>
-    <input type="text" id="textInput" placeholder="Or type your message here">
+<button id="toggleMicrophone">Start Recording</button>
+<div id="recordingStatus" style="color: red; display: none;">Recording...</div>
+<textarea id="textInput" placeholder="Or type your message here" rows="10" cols="50"></textarea>
     <button id="sendText">Send</button>
     <div id="response"></div>
 
@@ -56,4 +57,7 @@
             // and then display the response similarly to the transcribe response.
         });
     </script>
+<div id="chatWindow" style="border: 1px solid #ccc; padding: 10px; margin-top: 20px;">
+    <!-- Chat messages will be appended here -->
+</div>
 </html>
