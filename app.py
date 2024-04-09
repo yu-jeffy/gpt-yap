@@ -1,5 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+import speech_recognition as sr
+from gtts import gTTS
+import os
+import tempfile
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -27,26 +32,25 @@ def ask_gpt():
     user_input = request.form['user_input']
     conversation_history = request.form.get('conversation_history', '')
     
-    # Placeholder for GPT-4 API URL and headers
-    gpt_api_url = 'https://api.openai.com/v4/gpt-4'
-    headers = {
-        'Authorization': 'Bearer YOUR_API_KEY',
-        'Content-Type': 'application/json',
-    }
-    
-    payload = {
-        'prompt': user_input + '\n' + conversation_history,
-        'max_tokens': 150,
-        'temperature': 0.7,
-    }
-    
-    response = requests.post(gpt_api_url, json=payload, headers=headers)
-    
-    if response.status_code == 200:
-        gpt_response = response.json()['choices'][0]['text']
-        return jsonify({'gpt_response': gpt_response})
-    else:
-        return jsonify({'error': 'Failed to get response from GPT-4 API'}), response.status_code
+# Using the correct syntax and endpoint from gptexample.py
+gpt_api_url = 'https://api.openai.com/v4/completions'
+headers = {
+    'Authorization': f'Bearer {os.getenv("OPENAI_API_KEY")}',
+    'Content-Type': 'application/json',
+}
+
+payload = {
+    'model': 'gpt-4-turbo-preview',  # Adjust the model name as necessary
+    'messages': conversation_history + [{"role": "user", "content": user_input}]
+}
+
+response = requests.post(gpt_api_url, json=payload, headers=headers)
+
+if response.status_code == 200:
+    gpt_response = response.json()['choices'][0]['message']['content']
+    return jsonify({'gpt_response': gpt_response})
+else:
+    return jsonify({'error': 'Failed to get response from GPT API'}), response.status_code
 
 if __name__ == '__main__':
     app.run(debug=True)
