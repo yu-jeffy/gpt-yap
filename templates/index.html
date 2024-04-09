@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<style>
     body {
         font-family: 'Arial', sans-serif;
-        background-color: #f0f2f5; /* Light pastel background */
+        background-color: #f0f2f5;
         color: #333;
         margin: 0;
         padding: 20px;
     }
-    #toggleMicrophone, #sendText {
-        background-color: #78909c; /* Pastel button color */
+    button {
+        background-color: #78909c;
         border: none;
         color: white;
         padding: 10px 20px;
@@ -19,39 +18,48 @@
         margin: 4px 2px;
         cursor: pointer;
         border-radius: 20px;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #62757f;
     }
     #textInput {
         width: 100%;
-        height: 100px; /* Larger text area */
+        height: 150px;
         margin-top: 10px;
         padding: 10px;
         box-sizing: border-box;
         border-radius: 10px;
         border: 1px solid #ccc;
-        background-color: #e8eaf6; /* Light pastel text area */
+        background-color: #e8eaf6;
+        resize: none;
     }
     #chatWindow {
         border: 1px solid #ccc;
         padding: 10px;
         margin-top: 20px;
-        background-color: #ffffff; /* White background for chat window */
+        background-color: #ffffff;
         border-radius: 10px;
+        max-height: 400px;
+        overflow-y: auto;
     }
-    .user-message, .assistant-message {
+    .message {
         padding: 10px;
         margin: 5px 0;
         border-radius: 20px;
         max-width: 80%;
+        word-wrap: break-word;
     }
     .user-message {
-        background-color: #b2dfdb; /* Light pastel user message */
+        background-color: #b2dfdb;
         align-self: flex-end;
+        margin-left: auto;
     }
     .assistant-message {
-        background-color: #bbdefb; /* Light pastel assistant message */
+        background-color: #bbdefb;
         align-self: flex-start;
+        margin-right: auto;
     }
-</style>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -59,46 +67,70 @@
 </head>
 <body>
     <h1>Speak to GPT-4</h1>
-<button id="toggleMicrophone">Start Recording</button>
-<div id="recordingStatus" style="color: red; display: none;">Recording...</div>
-<textarea id="textInput" placeholder="Or type your message here" rows="10" cols="50"></textarea>
-    <button id="sendText">Send</button>
-    <div id="response"></div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        let isRecording = false;
-        let mediaRecorder;
-        let audioChunks = [];
-
+<button id="toggleRecording">Start Recording</button>
 <script>
-    // Existing JavaScript code for handling the microphone toggle
-    // Update the event listener for the toggleMicrophone button
-document.getElementById('toggleMicrophone').addEventListener('click', function() {
-    const recordingStatus = document.getElementById('recordingStatus');
-    if (!isRecording) {
-        // Start recording logic
-document.getElementById('toggleMicrophone').innerText = 'Stop Recording';
-        recordingStatus.innerHTML = '🔴 Now Recording'; // Show recording status with red circle emoji
-        recordingStatus.style.display = 'block';
-        isRecording = true;
-    } else {
-        // Stop recording logic
-document.getElementById('toggleMicrophone').innerText = 'Start Recording';
-        recordingStatus.style.display = 'none';
-        isRecording = false;
-    }
-});
+    document.getElementById('toggleRecording').addEventListener('click', function() {
+        const button = document.getElementById('toggleRecording');
+        if (button.innerText === 'Start Recording') {
+            fetch('/start-recording', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    button.innerText = 'Stop Recording';
+                });
+        } else {
+            fetch('/stop-recording', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    button.innerText = 'Start Recording';
+                });
+        }
+    });
 </script>
 
+                recordingStatus.style.display = 'none';
+                isRecording = false;
+
+                // Send the recorded audio to the server
+                const audioBlob = new Blob(audioChunks);
+                const formData = new FormData();
+                formData.append('audio_data', audioBlob);
+
+                fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the transcribed text
+                    document.getElementById('responseContainer').innerText = data.transcribed_text;
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
 
         document.getElementById('sendText').addEventListener('click', function() {
             const textInput = document.getElementById('textInput').value;
-            // Here you would send the textInput to the server for processing
-            // and then display the response similarly to the transcribe response.
+            document.getElementById('sendText').addEventListener('click', function() {
+                const textInput = document.getElementById('textInput').value;
+                
+                // Send the textInput to the server
+                fetch('/process-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: textInput })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the response
+                    document.getElementById('responseContainer').innerText = data.response;
+                })
+                .catch(error => console.error('Error:', error));
+            });
         });
     </script>
-<div id="chatWindow" style="border: 1px solid #ccc; padding: 10px; margin-top: 20px;">
-    <!-- Chat messages will be appended here -->
-</div>
-</html>
+
+    <div id="chatWindow"></div>
