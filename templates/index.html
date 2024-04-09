@@ -1,4 +1,57 @@
 <!DOCTYPE html>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f0f2f5; /* Light pastel background */
+        color: #333;
+        margin: 0;
+        padding: 20px;
+    }
+    #toggleMicrophone, #sendText {
+        background-color: #78909c; /* Pastel button color */
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 20px;
+    }
+    #textInput {
+        width: 100%;
+        height: 100px; /* Larger text area */
+        margin-top: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background-color: #e8eaf6; /* Light pastel text area */
+    }
+    #chatWindow {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 20px;
+        background-color: #ffffff; /* White background for chat window */
+        border-radius: 10px;
+    }
+    .user-message, .assistant-message {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 20px;
+        max-width: 80%;
+    }
+    .user-message {
+        background-color: #b2dfdb; /* Light pastel user message */
+        align-self: flex-end;
+    }
+    .assistant-message {
+        background-color: #bbdefb; /* Light pastel assistant message */
+        align-self: flex-start;
+    }
+</style>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -18,38 +71,26 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        document.getElementById('toggleMicrophone').addEventListener('click', function() {
-            if (!isRecording) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        mediaRecorder = new MediaRecorder(stream);
-                        mediaRecorder.start();
-                        audioChunks = [];
-                        mediaRecorder.addEventListener("dataavailable", event => {
-                            audioChunks.push(event.data);
-                        });
-                        mediaRecorder.addEventListener("stop", () => {
-                            const audioBlob = new Blob(audioChunks);
-                            const formData = new FormData();
-                            formData.append("audio_data", audioBlob);
-                            fetch("/transcribe", {
-                                method: "POST",
-                                body: formData,
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                document.getElementById('response').innerText = data.transcribed_text;
-                            })
-                            .catch(error => console.error("Error:", error));
-                        });
-                        isRecording = true;
-                    })
-                    .catch(error => console.error("Error:", error));
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-            }
-        });
+<script>
+    // Existing JavaScript code for handling the microphone toggle
+    // Update the event listener for the toggleMicrophone button
+document.getElementById('toggleMicrophone').addEventListener('click', function() {
+    const recordingStatus = document.getElementById('recordingStatus');
+    if (!isRecording) {
+        // Start recording logic
+document.getElementById('toggleMicrophone').innerText = 'Stop Recording';
+        recordingStatus.innerHTML = '🔴 Now Recording'; // Show recording status with red circle emoji
+        recordingStatus.style.display = 'block';
+        isRecording = true;
+    } else {
+        // Stop recording logic
+document.getElementById('toggleMicrophone').innerText = 'Start Recording';
+        recordingStatus.style.display = 'none';
+        isRecording = false;
+    }
+});
+</script>
+
 
         document.getElementById('sendText').addEventListener('click', function() {
             const textInput = document.getElementById('textInput').value;
